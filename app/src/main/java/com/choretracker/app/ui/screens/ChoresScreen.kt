@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.choretracker.app.data.Chore
+import com.choretracker.app.data.ChoreCompletion
 import com.choretracker.app.viewmodel.ChoreViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,40 +67,50 @@ fun ChoresScreen(viewModel: ChoreViewModel) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ChoreCategorySection(
+                choreCategorySection(
                     label = "Daily",
                     chores = groupedChores[ChoreViewModel.CATEGORY_DAILY] ?: emptyList(),
                     doneSet = doneToday,
-                    onCheck = { viewModel.completeChore(it) }
+                    completions = todayCompletions,
+                    onCheck = { viewModel.completeChore(it) },
+                    onUncheck = { viewModel.undoCompletion(it) }
                 )
-                ChoreCategorySection(
+                choreCategorySection(
                     label = "Weekly",
                     chores = groupedChores[ChoreViewModel.CATEGORY_WEEKLY] ?: emptyList(),
                     doneSet = doneThisWeek,
-                    onCheck = { viewModel.completeChore(it) }
+                    completions = weekCompletions,
+                    onCheck = { viewModel.completeChore(it) },
+                    onUncheck = { viewModel.undoCompletion(it) }
                 )
-                ChoreCategorySection(
+                choreCategorySection(
                     label = "Biweekly",
                     chores = groupedChores[ChoreViewModel.CATEGORY_BIWEEKLY] ?: emptyList(),
                     doneSet = doneThisBiweek,
-                    onCheck = { viewModel.completeChore(it) }
+                    completions = biweekCompletions,
+                    onCheck = { viewModel.completeChore(it) },
+                    onUncheck = { viewModel.undoCompletion(it) }
                 )
-                ChoreCategorySection(
+                choreCategorySection(
                     label = "Monthly",
                     chores = groupedChores[ChoreViewModel.CATEGORY_MONTHLY] ?: emptyList(),
                     doneSet = doneThisMonth,
-                    onCheck = { viewModel.completeChore(it) }
+                    completions = monthCompletions,
+                    onCheck = { viewModel.completeChore(it) },
+                    onUncheck = { viewModel.undoCompletion(it) }
                 )
             }
         }
     }
 }
 
-private fun LazyListScope.ChoreCategorySection(
+private fun LazyListScope.choreCategorySection(
     label: String,
     chores: List<Chore>,
     doneSet: Set<String>,
-    onCheck: (Chore) -> Unit
+    completions: List<ChoreCompletion>,
+    onCheck: (Chore) -> Unit,
+    onUncheck: (ChoreCompletion) -> Unit
 ) {
     if (chores.isEmpty()) return
 
@@ -123,7 +134,13 @@ private fun LazyListScope.ChoreCategorySection(
                 else
                     MaterialTheme.colorScheme.surfaceVariant
             ),
-            onClick = { if (!isDone) onCheck(chore) }
+            onClick = {
+                if (isDone) {
+                    completions.lastOrNull { it.choreName == chore.name }?.let(onUncheck)
+                } else {
+                    onCheck(chore)
+                }
+            }
         ) {
             Row(
                 modifier = Modifier

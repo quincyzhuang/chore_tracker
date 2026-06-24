@@ -6,9 +6,11 @@ A local-first Android app for tracking household chores across four cadences: da
 
 - **Overview** — See which chores still need to be done for the current day, week, biweek, and month
 - **Chores** — Check off chores as you complete them; each check-in is timestamped
-- **Manage** — Add or delete chores, organised by category
+- **Manage** — Add or delete chores, organised by category; import and export chores as JSON files
 - **History** — Browse past completions filtered by 7 days, 30 days, or all time, with undo support
 - **Auto-cleanup** — Completions older than 3 months are automatically removed
+- **Import / Export** — Share or back up your chore list as JSON; imports merge additively, keeping existing chores
+- **Version label** — The current app version is shown in the Overview screen's top bar
 - **100 % local** — All data lives in a Room (SQLite) database on-device; no network or cloud dependency
 
 ## Project structure

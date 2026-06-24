@@ -42,3 +42,13 @@ Period boundaries are computed in `ChoreViewModel`:
 - **Weekly:** Monday 00:00 – Sunday 23:59
 - **Biweekly:** aligns with even/odd ISO weeks
 - **Monthly:** calendar month boundaries
+
+## README updates
+
+When adding a new feature, update the **Features** section in `README.md` to reflect the change.
+
+## Versioning
+
+The app version is defined as `APP_VERSION` in `ChoreViewModel`'s companion object.
+- **Small feature adds** → increment the patch number by 0.1 (e.g. `v0.1` → `v0.2`)
+- **Major feature additions** → promote to the next integer (e.g. `v0.2` → `v1.0`)
