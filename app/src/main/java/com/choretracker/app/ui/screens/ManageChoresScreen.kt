@@ -2,6 +2,7 @@ package com.choretracker.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -132,8 +133,7 @@ fun ManageChoresScreen(viewModel: ChoreViewModel) {
     }
 }
 
-@Composable
-private fun ManageCategorySection(
+private fun LazyListScope.ManageCategorySection(
     label: String,
     chores: List<Chore>,
     onDelete: (Chore) -> Unit

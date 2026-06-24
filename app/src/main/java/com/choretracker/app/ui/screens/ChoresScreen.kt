@@ -2,6 +2,7 @@ package com.choretracker.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -94,8 +95,7 @@ fun ChoresScreen(viewModel: ChoreViewModel) {
     }
 }
 
-@Composable
-private fun ChoreCategorySection(
+private fun LazyListScope.ChoreCategorySection(
     label: String,
     chores: List<Chore>,
     doneSet: Set<String>,
