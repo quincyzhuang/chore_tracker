@@ -9,9 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.choretracker.app.data.Chore
 import com.choretracker.app.viewmodel.ChoreViewModel
-import kotlinx.coroutines.flow.combine
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +42,15 @@ fun OverviewScreen(viewModel: ChoreViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                ),
+                actions = {
+                    Text(
+                        text = ChoreViewModel.APP_VERSION,
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                }
             )
         }
     ) { padding ->

@@ -6,8 +6,7 @@ class ChoreRepository(private val choreDao: ChoreDao) {
 
     val allChores: Flow<List<Chore>> = choreDao.getAllChores()
 
-    fun getChoresByCategory(category: String): Flow<List<Chore>> =
-        choreDao.getChoresByCategory(category)
+    suspend fun getAllChoresOnce(): List<Chore> = choreDao.getChoresOnce()
 
     suspend fun addChore(name: String, category: String) {
         choreDao.insertChore(Chore(name = name, category = category))
@@ -34,13 +33,6 @@ class ChoreRepository(private val choreDao: ChoreDao) {
 
     fun getCompletionsBetween(startMillis: Long, endMillis: Long): Flow<List<ChoreCompletion>> =
         choreDao.getCompletionsBetween(startMillis, endMillis)
-
-    fun getCompletionsForChoreBetween(
-        choreName: String,
-        startMillis: Long,
-        endMillis: Long
-    ): Flow<List<ChoreCompletion>> =
-        choreDao.getCompletionsForChoreBetween(choreName, startMillis, endMillis)
 
     fun getAllCompletions(): Flow<List<ChoreCompletion>> =
         choreDao.getAllCompletions()

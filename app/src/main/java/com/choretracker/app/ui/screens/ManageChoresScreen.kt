@@ -1,5 +1,7 @@
 package com.choretracker.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -7,14 +9,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.choretracker.app.data.Chore
 import com.choretracker.app.viewmodel.ChoreViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,9 +29,56 @@ fun ManageChoresScreen(viewModel: ChoreViewModel) {
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf<Chore?>(null) }
+    var showMenu by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val groupedChores = remember(allChores) {
         allChores.groupBy { it.category }
+    }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                try {
+                    val json = viewModel.getExportJson()
+                    context.contentResolver.openOutputStream(it)?.use { os ->
+                        os.write(json.toByteArray())
+                    }
+                } catch (e: Exception) {
+                    snackbarHostState.showSnackbar("Export failed: ${e.message}")
+                }
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                try {
+                    val json = context.contentResolver.openInputStream(it)?.use { input ->
+                        input.bufferedReader().readText()
+                    } ?: return@launch
+                    viewModel.importChores(json) { added, skipped ->
+                        scope.launch {
+                            val message = if (added >= 0)
+                                "Imported $added chore(s), $skipped skipped"
+                            else
+                                "Import failed: invalid file format"
+                            snackbarHostState.showSnackbar(message)
+                        }
+                    }
+                } catch (e: Exception) {
+                    snackbarHostState.showSnackbar("Import failed: ${e.message}")
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -37,16 +90,41 @@ fun ManageChoresScreen(viewModel: ChoreViewModel) {
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    IconButton(onClick = { showAddDialog = true }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Add chore",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "Menu",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Add chore") },
+                                onClick = { showMenu = false; showAddDialog = true },
+                                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Export") },
+                                onClick = { showMenu = false; exportLauncher.launch("chores_export.json") },
+                                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Import") },
+                                onClick = {
+                                    showMenu = false
+                                    importLauncher.launch(arrayOf("application/json", "*/*"))
+                                }
+                            )
+                        }
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (allChores.isEmpty()) {
             Box(

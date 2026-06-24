@@ -19,6 +19,9 @@ interface ChoreDao {
     @Query("SELECT * FROM chores ORDER BY category, name")
     fun getAllChores(): Flow<List<Chore>>
 
+    @Query("SELECT * FROM chores")
+    suspend fun getChoresOnce(): List<Chore>
+
     @Query("SELECT * FROM chores WHERE category = :category ORDER BY name")
     fun getChoresByCategory(category: String): Flow<List<Chore>>
 

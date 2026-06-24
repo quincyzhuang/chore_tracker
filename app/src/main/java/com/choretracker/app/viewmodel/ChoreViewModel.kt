@@ -8,14 +8,8 @@ import com.choretracker.app.data.ChoreCompletion
 import com.choretracker.app.data.ChoreDatabase
 import com.choretracker.app.data.ChoreRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.TimeZone
 
 class ChoreViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -23,9 +17,6 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
 
     val allChores: Flow<List<Chore>>
     val allCompletions: Flow<List<ChoreCompletion>>
-
-    private val _refreshTrigger = MutableStateFlow(0L)
-    val refreshTrigger: StateFlow<Long> = _refreshTrigger
 
     init {
         val dao = ChoreDatabase.getInstance(application).choreDao()
@@ -36,10 +27,6 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.cleanupOldHistory()
         }
-    }
-
-    fun refresh() {
-        _refreshTrigger.value = System.currentTimeMillis()
     }
 
     // --- Chore management ---
@@ -171,10 +158,6 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
             .filter { it.category == category && it.name !in doneNames }
     }
 
-    fun getCompletionsBetweenFlow(start: Long, end: Long): Flow<List<ChoreCompletion>> {
-        return repository.getCompletionsBetween(start, end)
-    }
-
     // --- History ---
 
     fun cleanupOldHistory() {
@@ -183,7 +166,55 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // --- Import / Export ---
+
+    suspend fun getExportJson(): String {
+        val chores = repository.getAllChoresOnce()
+        val json = org.json.JSONObject()
+        json.put("app", "ChoreTracker")
+        json.put("version", 1)
+        val choresArray = org.json.JSONArray()
+        for (chore in chores) {
+            val choreObj = org.json.JSONObject()
+            choreObj.put("name", chore.name)
+            choreObj.put("category", chore.category)
+            choresArray.put(choreObj)
+        }
+        json.put("chores", choresArray)
+        return json.toString(2)
+    }
+
+    fun importChores(jsonString: String, onResult: (Int, Int) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val json = org.json.JSONObject(jsonString)
+                val choresArray = json.getJSONArray("chores")
+                val existingChores = repository.getAllChoresOnce()
+                val existingPairs = existingChores.map { it.name to it.category }.toSet()
+                var added = 0
+                var skipped = 0
+                for (i in 0 until choresArray.length()) {
+                    val choreObj = choresArray.getJSONObject(i)
+                    val name = choreObj.getString("name").trim()
+                    val category = choreObj.getString("category").trim()
+                    if (name.isNotBlank() && category.isNotBlank()) {
+                        if (name to category in existingPairs) {
+                            skipped++
+                        } else {
+                            repository.addChore(name, category)
+                            added++
+                        }
+                    }
+                }
+                onResult(added, skipped)
+            } catch (_: Exception) {
+                onResult(-1, 0)
+            }
+        }
+    }
+
     companion object {
+        const val APP_VERSION = "v0.1"
         const val CATEGORY_DAILY = "daily"
         const val CATEGORY_WEEKLY = "weekly"
         const val CATEGORY_BIWEEKLY = "biweekly"
