@@ -29,10 +29,19 @@ ChoreTracker/
 └── app/
     ├── build.gradle.kts          # App module build config
     ├── proguard-rules.pro
-    └── src/main/
-        ├── AndroidManifest.xml
-        ├── res/                  # Drawables, strings, colours, theme XML
-        └── java/com/choretracker/app/
+    └── src/
+        ├── main/
+        │   ├── AndroidManifest.xml
+        │   ├── res/                  # Drawables, strings, colours, theme XML
+        │   └── java/com/choretracker/app/
+        └── test/
+            ├── resources/
+            │   └── robolectric.properties
+            └── java/com/choretracker/app/
+                ├── data/
+                │   └── ChoreRepositoryTest.kt
+                └── viewmodel/
+                    └── ChoreViewModelTest.kt
             ├── ChoreTrackerApp.kt          # Application class
             ├── MainActivity.kt              # Entry point, bottom navigation
             ├── data/

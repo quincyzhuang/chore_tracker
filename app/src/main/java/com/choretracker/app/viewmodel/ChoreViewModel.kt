@@ -11,19 +11,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-class ChoreViewModel(application: Application) : AndroidViewModel(application) {
+class ChoreViewModel(
+    application: Application,
+    private val repository: ChoreRepository = ChoreRepository(
+        ChoreDatabase.getInstance(application).choreDao()
+    )
+) : AndroidViewModel(application) {
 
-    private val repository: ChoreRepository
-
-    val allChores: Flow<List<Chore>>
-    val allCompletions: Flow<List<ChoreCompletion>>
+    val allChores: Flow<List<Chore>> = repository.allChores
+    val allCompletions: Flow<List<ChoreCompletion>> = repository.getAllCompletions()
 
     init {
-        val dao = ChoreDatabase.getInstance(application).choreDao()
-        repository = ChoreRepository(dao)
-        allChores = repository.allChores
-        allCompletions = repository.getAllCompletions()
-
         viewModelScope.launch {
             repository.cleanupOldHistory()
         }
