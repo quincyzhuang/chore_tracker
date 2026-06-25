@@ -126,14 +126,12 @@ private fun PendingCategorySection(
                 fontWeight = FontWeight.Bold,
                 color = color
             )
-            if (chores.isNotEmpty()) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
             if (chores.isEmpty()) {
                 Text(
                     text = "All done!",
