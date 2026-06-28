@@ -3,8 +3,6 @@ package com.choretracker.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,14 +11,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.choretracker.app.data.ChoreCompletion
 import com.choretracker.app.viewmodel.ChoreViewModel
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(viewModel: ChoreViewModel) {
-    val scope = rememberCoroutineScope()
     val allCompletions by viewModel.allCompletions.collectAsState(initial = emptyList())
 
     var selectedFilter by remember { mutableIntStateOf(0) }
@@ -50,19 +46,6 @@ fun HistoryScreen(viewModel: ChoreViewModel) {
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                actions = {
-                    IconButton(onClick = {
-                        scope.launch {
-                            viewModel.cleanupOldHistory()
-                        }
-                    }) {
-                        Icon(
-                            Icons.Default.DeleteSweep,
-                            contentDescription = "Clean up old history",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
             )
         }
     ) { padding ->

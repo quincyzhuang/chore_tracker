@@ -36,9 +36,4 @@ class ChoreRepository(private val choreDao: ChoreDao) {
 
     fun getAllCompletions(): Flow<List<ChoreCompletion>> =
         choreDao.getAllCompletions()
-
-    suspend fun cleanupOldHistory() {
-        val cutoff = System.currentTimeMillis() - 90L * 24 * 60 * 60 * 1000
-        choreDao.deleteCompletionsOlderThan(cutoff)
-    }
 }
