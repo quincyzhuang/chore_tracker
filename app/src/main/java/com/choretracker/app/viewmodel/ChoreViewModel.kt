@@ -8,8 +8,11 @@ import com.choretracker.app.data.ChoreCompletion
 import com.choretracker.app.data.ChoreDatabase
 import com.choretracker.app.data.ChoreRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.math.floor
+import kotlin.math.pow
 
 class ChoreViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -17,6 +20,7 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
 
     val allChores: Flow<List<Chore>>
     val allCompletions: Flow<List<ChoreCompletion>>
+    val playerState: Flow<PlayerState>
 
     init {
         val dao = ChoreDatabase.getInstance(application).choreDao()
@@ -24,8 +28,10 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
         allChores = repository.allChores
         allCompletions = repository.getAllCompletions()
 
-        viewModelScope.launch {
-            repository.cleanupOldHistory()
+        playerState = allCompletions.map { completions ->
+            val totalXp = completions.sumOf { xpForCategory(it.category) }
+            val (level, xpInto) = calculateLevelAndProgress(totalXp)
+            PlayerState(level, xpInto, xpToNextLevel(level))
         }
     }
 
@@ -48,7 +54,6 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
     fun completeChore(chore: Chore) {
         viewModelScope.launch {
             repository.completeChore(chore)
-            repository.cleanupOldHistory()
         }
     }
 
@@ -159,14 +164,6 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
             .filter { it.category == category && it.name !in doneNames }
     }
 
-    // --- History ---
-
-    fun cleanupOldHistory() {
-        viewModelScope.launch {
-            repository.cleanupOldHistory()
-        }
-    }
-
     // --- Import / Export ---
 
     suspend fun getExportJson(): String {
@@ -215,13 +212,39 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     companion object {
-        const val APP_VERSION = "v0.2"
+        const val APP_VERSION = "v0.3"
         const val CATEGORY_DAILY = "daily"
         const val CATEGORY_WEEKLY = "weekly"
         const val CATEGORY_BIWEEKLY = "biweekly"
         const val CATEGORY_MONTHLY = "monthly"
 
         val CATEGORIES = listOf(CATEGORY_DAILY, CATEGORY_WEEKLY, CATEGORY_BIWEEKLY, CATEGORY_MONTHLY)
+
+        private val CATEGORY_XP = mapOf(
+            CATEGORY_DAILY to 10,
+            CATEGORY_WEEKLY to 30,
+            CATEGORY_BIWEEKLY to 50,
+            CATEGORY_MONTHLY to 80
+        )
+        private const val BASE_LEVEL_XP = 100
+        private const val LEVEL_XP_RATIO = 0.1
+
+        fun xpForCategory(category: String): Int = CATEGORY_XP[category] ?: 0
+
+        fun xpToNextLevel(level: Int): Int =
+            floor(BASE_LEVEL_XP * (1.0 + LEVEL_XP_RATIO).pow(level - 1)).toInt()
+
+        fun calculateLevelAndProgress(totalXp: Int): Pair<Int, Int> {
+            var level = 1
+            var remaining = totalXp
+            while (true) {
+                val needed = xpToNextLevel(level)
+                if (remaining < needed) break
+                remaining -= needed
+                level++
+            }
+            return level to remaining
+        }
 
         fun categoryDisplayName(category: String): String {
             return when (category) {
@@ -234,3 +257,5 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
+data class PlayerState(val level: Int, val currentXp: Int, val xpToNext: Int)

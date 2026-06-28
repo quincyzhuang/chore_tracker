@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.choretracker.app.data.Chore
 import com.choretracker.app.viewmodel.ChoreViewModel
+import com.choretracker.app.viewmodel.PlayerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,6 +22,8 @@ fun OverviewScreen(viewModel: ChoreViewModel) {
     val weekCompletions by viewModel.getWeekCompletions().collectAsState(initial = emptyList())
     val biweekCompletions by viewModel.getBiweekCompletions().collectAsState(initial = emptyList())
     val monthCompletions by viewModel.getMonthCompletions().collectAsState(initial = emptyList())
+
+    val playerState by viewModel.playerState.collectAsState(initial = PlayerState(1, 0, 100))
 
     val pendingDaily = remember(allChores, todayCompletions) {
         viewModel.getPendingChores(allChores, todayCompletions, ChoreViewModel.CATEGORY_DAILY)
@@ -70,8 +73,10 @@ fun OverviewScreen(viewModel: ChoreViewModel) {
                 text = java.text.SimpleDateFormat("EEEE, MMMM d, yyyy", java.util.Locale.getDefault())
                     .format(java.util.Date()),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+
+            LevelXpCard(playerState = playerState)
 
             PendingCategorySection(
                 title = "Daily Chores",
@@ -99,6 +104,43 @@ fun OverviewScreen(viewModel: ChoreViewModel) {
                 subtitle = "Not done this month",
                 chores = pendingMonthly,
                 color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun LevelXpCard(playerState: PlayerState) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Level ${playerState.level}",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { playerState.currentXp.toFloat() / playerState.xpToNext.toFloat() },
+                modifier = Modifier.fillMaxWidth(),
+                trackColor = MaterialTheme.colorScheme.secondaryContainer,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "EXP: ${playerState.currentXp} / ${playerState.xpToNext}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }

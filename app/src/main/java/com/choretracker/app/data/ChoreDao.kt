@@ -34,9 +34,6 @@ interface ChoreDao {
     @Query("SELECT * FROM completions WHERE choreName = :choreName AND completedDate >= :startMillis AND completedDate <= :endMillis ORDER BY completedDate DESC")
     fun getCompletionsForChoreBetween(choreName: String, startMillis: Long, endMillis: Long): Flow<List<ChoreCompletion>>
 
-    @Query("DELETE FROM completions WHERE completedDate < :cutoffMillis")
-    suspend fun deleteCompletionsOlderThan(cutoffMillis: Long)
-
     @Query("SELECT * FROM completions ORDER BY completedDate DESC")
     fun getAllCompletions(): Flow<List<ChoreCompletion>>
 
