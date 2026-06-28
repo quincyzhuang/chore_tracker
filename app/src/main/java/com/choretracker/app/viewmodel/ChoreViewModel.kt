@@ -75,6 +75,7 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getWeekStartMillis(): Long {
         val cal = Calendar.getInstance()
+        cal.firstDayOfWeek = Calendar.MONDAY
         cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
@@ -214,7 +215,7 @@ class ChoreViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     companion object {
-        const val APP_VERSION = "v0.1"
+        const val APP_VERSION = "v0.2"
         const val CATEGORY_DAILY = "daily"
         const val CATEGORY_WEEKLY = "weekly"
         const val CATEGORY_BIWEEKLY = "biweekly"
